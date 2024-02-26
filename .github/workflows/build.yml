@@ -26,7 +26,7 @@ jobs:
           #- os: macos-latest
           # name: darwin
           # suffix: ''
-          - os: self-hosted
+          - os: Pyinstaller-runner
             name: linux
             suffix: ''
     needs: [github-release]
