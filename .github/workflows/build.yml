@@ -54,6 +54,8 @@ jobs:
         run: |
           pipenv sync
           pipenv run pip install pyinstaller
+      - name: ls
+        run: ls
       - name: Build executable
         run: pipenv run pyinstaller checkov.spec
       - name: Zip artifact
