@@ -23,9 +23,9 @@ jobs:
     strategy:
       matrix:
         include:
-          #- os: macos-latest
-          # name: darwin
-          # suffix: ''
+          - os: macos-latest
+            name: darwin
+            suffix: ''
           - os: Pyinstaller-runner
             name: linux
             suffix: ''
