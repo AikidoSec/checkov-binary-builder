@@ -58,6 +58,7 @@ jobs:
         if: matrix.name == 'darwin'
         run: | 
           pyenv install 3.8
+          pyenv global 3.8
           pyenv versions
           pyenv which python
       - name: Install pipenv
