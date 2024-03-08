@@ -23,12 +23,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
+          # macos-13-xlarge runs on ARM
+          - os: macos-13-xlarge
             name: darwin
-            suffix: ''
+            suffix: 'ARM64'
           - os: Pyinstaller-runner
             name: linux
-            suffix: ''
+            suffix: 'X86_64'
     needs: [github-release]
     if: needs.github-release.outputs.upload_url != ''
     runs-on: ${{ matrix.os }}
@@ -45,6 +46,7 @@ jobs:
           ref: 3.2.19
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1  # v4
+        if: matrix.name == 'linux'
         with:
           python-version: 3.8
       - name: Install pipenv
@@ -54,8 +56,6 @@ jobs:
         run: |
           pipenv sync
           pipenv run pip install pyinstaller
-      - name: ls
-        run: ls
       - name: Build executable
         run: pipenv run pyinstaller checkov.spec
       - name: Zip artifact
@@ -67,5 +67,5 @@ jobs:
         with:
           upload_url: ${{ needs.github-release.outputs.upload_url }}
           asset_path: checkov.zip
-          asset_name: checkov_${{ matrix.name }}_X86_64.zip
+          asset_name: checkov_${{ matrix.name }}_${{ matrix.suffix }}.zip
           asset_content_type: application/zip
