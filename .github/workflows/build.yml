@@ -54,7 +54,10 @@ jobs:
         uses: gabrielfalcao/pyenv-action@v18
         with:
           default: 3.8
-      - name: Zip artifact
+      - name: pyenv local
+        if: matrix.name == 'darwin'
+        run: pyenv local 3.8
+      - name: Check python version
         if: matrix.name == 'darwin'
         run: pyenv which python
       - name: Install pipenv
