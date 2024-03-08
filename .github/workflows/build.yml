@@ -54,12 +54,12 @@ jobs:
         uses: gabrielfalcao/pyenv-action@v18
         with:
           default: 3.8
-      - name: pyenv versions
+      - name: pyenv
         if: matrix.name == 'darwin'
-        run: pyenv versions
-      - name: Check python version
-        if: matrix.name == 'darwin'
-        run: pyenv which python
+        run: | 
+          pyenv install 3.8
+          pyenv versions
+          pyenv which python
       - name: Install pipenv
         run: |
           python -m pip install --no-cache-dir --upgrade pipenv
