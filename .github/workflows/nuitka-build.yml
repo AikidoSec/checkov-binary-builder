@@ -106,7 +106,7 @@ jobs:
         
           --output-filename=checkov-nuitka \
         
-          -m checkov.main
+          checkov/main.py
 
       - name: ls
         run: ls -la /
