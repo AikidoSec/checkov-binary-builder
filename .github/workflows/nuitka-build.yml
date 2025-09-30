@@ -79,7 +79,7 @@ jobs:
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
           --include-data-dir="./checkov" \
-          --output-filename=checkov-nuitka \
+          --output-filename=checkov=checkov \
           checkov/main.py
 
       - name: List directory contents
