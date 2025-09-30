@@ -1,0 +1,125 @@
+on:
+  push:
+    branches:
+      - nuitka-build
+  workflow_dispatch:
+
+name: Build checkov binary using Nuitka
+
+jobs:
+  github-release:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.sha }}
+          release_name: Release v${{ github.sha }}
+          draft: false
+          prerelease: false
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: v${{ github.sha }}
+  build-release-artifacts:
+    strategy:
+      matrix:
+        include:
+          # macos-13-xlarge runs on ARM
+          - os: macos-13-xlarge
+            name: darwin
+            suffix: 'ARM64'
+          - os: Pyinstaller-runner
+            name: linux
+            suffix: 'X86_64'
+    needs: [github-release]
+    if: needs.github-release.outputs.upload_url != ''
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3
+        with:
+          repository: bridgecrewio/checkov
+          ref: 3.2.145
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1  # v4
+        if: matrix.name == 'linux'
+        with:
+          python-version: 3.8
+
+      - name: Install python version with pyenv
+        if: matrix.name == 'darwin'
+        uses: gabrielfalcao/pyenv-action@v18
+        with:
+          default: 3.8
+
+      - name: pyenv
+        if: matrix.name == 'darwin'
+        run: | 
+          pyenv install 3.8
+          pyenv global 3.8
+          pyenv versions
+          pyenv which python
+
+      - name: Install pipenv
+        run: |
+          python -m pip install --no-cache-dir --upgrade pipenv --user
+
+      - name: Install deps and nuitka
+        run: |
+          pipenv sync
+          pipenv run python -m pip install nuitka
+          
+      - name: Build executable
+        run: |
+          pipenv run python -m nuitka \
+          --standalone --onefile \
+          --follow-imports \
+
+          --include-package=checkov
+          --include-package-data=checkov
+
+          --include-package=bc_python_hcl2 \
+          --include-package=boto3 \
+          --include-package=botocore \
+          --include-package=policyuniverse \
+          --include-package=yaml \
+          --include-package=jinja2 \
+        
+          --lto=yes" \
+          --assume-yes-for-downloads" \
+        
+          --python-flag=no_site" \
+          --python-flag=-O" \
+        
+          --output-filename=checkov-nuitka \
+        
+          -m checkov.main
+
+      - name: ls
+        run: ls -la /
+
+      - name: Zip artifact
+        run: zip -j checkov.zip checkov-nuitka
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.github-release.outputs.upload_url }}
+          asset_path: checkov.zip
+          asset_name: checkov_${{ matrix.name }}_${{ matrix.suffix }}.zip
+          asset_content_type: application/zip
