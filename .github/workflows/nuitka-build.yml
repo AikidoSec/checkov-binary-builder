@@ -103,7 +103,7 @@ jobs:
           --python-flag=no_site \
           --python-flag=-O \
           --output-filename=checkov-nuitka \
-          -m checkov.main
+          checkov/main.py
       - name: ls
         run: ls -la /
 
