@@ -90,27 +90,20 @@ jobs:
           pipenv run python -m nuitka \
           --standalone --onefile \
           --follow-imports \
-
-          --include-package=checkov
-          --include-package-data=checkov
-
+          --include-package=checkov \
+          --include-package-data=checkov \
           --include-package=bc_python_hcl2 \
           --include-package=boto3 \
           --include-package=botocore \
           --include-package=policyuniverse \
           --include-package=yaml \
           --include-package=jinja2 \
-        
           --lto=yes" \
-          --assume-yes-for-downloads" \
-        
-          --python-flag=no_site" \
-          --python-flag=-O" \
-        
+          --assume-yes-for-downloads \
+          --python-flag=no_site \
+          --python-flag=-O \
           --output-filename=checkov-nuitka \
-        
-          checkov/main.py
-
+          -m checkov.main
       - name: ls
         run: ls -la /
 
