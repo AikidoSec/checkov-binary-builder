@@ -75,20 +75,10 @@ jobs:
           pipenv run python -m nuitka \
           --standalone --onefile \
           --follow-imports \
-          --include-package=policyuniverse \
           --include-package=cloudsplaining \
           --include-package=detect_secrets.plugins \
-          --include-package=policyuniverse.policy \
           --include-package=cloudsplaining.scan \
-          --include-package-data=hcl2 \
-          --include-package-data=license_expression \
-          --include-package-data=spdx \
-          --include-package-data=pycep \
-          --include-package-data=detect_secrets \
-          --include-package-data=policyuniverse \
-          --include-package-data=policy_sentry \
-          --include-package-data=cloudsplaining \
-          --include-package-data=checkov \
+          --include-data-dir=checkov \
           --output-filename=checkov-nuitka \
           checkov/main.py
 
