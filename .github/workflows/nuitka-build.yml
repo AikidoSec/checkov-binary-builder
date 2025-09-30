@@ -81,6 +81,10 @@ jobs:
           --include-package-data=hcl2 \
           --include-data-dir=checkov=checkov \
           --output-filename=checkov-nuitka \
+          --lto=yes \
+          --assume-yes-for-downloads \
+          --python-flag=no_site \
+          --python-flag=-O \
           checkov/main.py
 
       - name: List directory contents
