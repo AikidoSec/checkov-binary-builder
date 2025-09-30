@@ -78,6 +78,7 @@ jobs:
           --include-package=cloudsplaining \
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
+          --include-package-data=hcl2 \
           --include-data-dir=checkov=checkov \
           --output-filename=checkov-nuitka \
           checkov/main.py
