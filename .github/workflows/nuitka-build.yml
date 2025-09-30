@@ -98,7 +98,7 @@ jobs:
           --include-package=policyuniverse \
           --include-package=yaml \
           --include-package=jinja2 \
-          --lto=yes" \
+          --lto=yes \
           --assume-yes-for-downloads \
           --python-flag=no_site \
           --python-flag=-O \
