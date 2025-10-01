@@ -79,6 +79,12 @@ jobs:
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
           --include-package-data=hcl2 \
+          --include-package-data=hspdx \
+          --include-package-data=pycep \
+          --include-package-data=detect_secrets \
+          --include-package-data=policyuniverse \
+          --include-package-data=policy_sentry \
+          --include-package-data=cloudsplaining \
           --include-data-dir=checkov=checkov \
           --output-filename=checkov-nuitka \
           --lto=yes \
