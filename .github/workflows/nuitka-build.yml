@@ -73,7 +73,7 @@ jobs:
       - name: Build executable
         run: |
           pipenv run python -m nuitka \
-          --standalone --onefile \
+          --standalone \
           --follow-imports \
           --include-package=cloudsplaining \
           --include-package=detect_secrets.plugins \
@@ -89,7 +89,6 @@ jobs:
           --output-filename=checkov-nuitka \
           --lto=yes \
           --assume-yes-for-downloads \
-          --python-flag=no_site \
           --python-flag=-O \
           checkov/main.py
 
@@ -97,7 +96,8 @@ jobs:
         run: ls -la /
 
       - name: Zip artifact
-        run: zip -j checkov.zip checkov-nuitka
+        run: |
+          zip -r checkov.zip checkov-nuitka checkov-nuitka.dist
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
