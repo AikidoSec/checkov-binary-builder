@@ -76,6 +76,8 @@ jobs:
           --standalone \
           --follow-imports \
           --include-module=site \
+          --include-module=builtins \
+          --include-module=sys \
           --include-package=cloudsplaining \
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
@@ -88,10 +90,10 @@ jobs:
           --include-package-data=policy_sentry \
           --include-package-data=cloudsplaining \
           --include-data-dir=checkov=checkov \
+          --enable-plugin=pylint-warnings \
           --output-filename=checkov-nuitka \
           --lto=yes \
           --assume-yes-for-downloads \
-          --python-flag=-O \
           checkov/main.py
 
       - name: List directory contents
