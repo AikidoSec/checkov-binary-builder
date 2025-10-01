@@ -75,9 +75,12 @@ jobs:
           pipenv run python -m nuitka \
           --standalone \
           --follow-imports \
+          --include-module=site \
           --include-package=cloudsplaining \
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
+          --include-package=rich \
+          --include-package=colorama \
           --include-package-data=hcl2 \
           --include-package-data=hspdx \
           --include-package-data=pycep \
