@@ -79,7 +79,6 @@ jobs:
           --include-package=cloudsplaining \
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
-          --include-package=rich \
           --include-package=colorama \
           --include-package-data=hcl2 \
           --include-package-data=hspdx \
