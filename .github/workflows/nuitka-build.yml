@@ -82,7 +82,7 @@ jobs:
           --include-package=colorama \
           --include-package=tqdm \
           --include-package-data=hcl2 \
-          --include-package-data=spdx \
+          --include-package-data=spdx-tools \
           --include-package-data=pycep \
           --include-package-data=detect_secrets \
           --include-package-data=policyuniverse \
@@ -94,6 +94,9 @@ jobs:
           --lto=yes \
           --assume-yes-for-downloads \
           --report=compilation-report.xml \
+          --enable-plugin=anti-bloat \
+          --noinclude-pytest-mode=nofollow \
+          --noinclude-setuptools-mode=nofollow \
           checkov/main.py
 
       - name: List directory contents
