@@ -76,12 +76,11 @@ jobs:
           --standalone \
           --follow-imports \
           --include-module=site \
-          --include-module=builtins \
-          --include-module=sys \
           --include-package=cloudsplaining \
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
           --include-package=colorama \
+          --include-package=tqdm \
           --include-package-data=hcl2 \
           --include-package-data=hspdx \
           --include-package-data=pycep \
