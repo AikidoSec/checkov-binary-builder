@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3
         with:
           repository: bridgecrewio/checkov
-          ref: 3.2.145
+          ref: 3.2.473
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-python@v6  # v6
