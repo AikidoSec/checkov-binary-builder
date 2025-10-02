@@ -94,7 +94,6 @@ jobs:
           --lto=yes \
           --assume-yes-for-downloads \
           --report=compilation-report.xml \
-          --debug \
           checkov/main.py
 
       - name: List directory contents
