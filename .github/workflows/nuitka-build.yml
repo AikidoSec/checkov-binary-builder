@@ -92,8 +92,8 @@ jobs:
           --output-filename=checkov-nuitka \
           --lto=yes \
           --assume-yes-for-downloads \
-          --deployment
-          --report=compilation-report.xml
+          --report=compilation-report.xml \
+          --debug \
           checkov/main.py
 
       - name: List directory contents
