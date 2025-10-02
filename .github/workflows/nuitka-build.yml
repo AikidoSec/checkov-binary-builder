@@ -75,7 +75,6 @@ jobs:
           pipenv run python -m nuitka \
           --standalone \
           --follow-imports \
-          --include-module=site \
           --include-package=cloudsplaining \
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
@@ -93,10 +92,15 @@ jobs:
           --output-filename=checkov-nuitka \
           --lto=yes \
           --assume-yes-for-downloads \
+          --deployment
+          --report=compilation-report.xml
           checkov/main.py
 
       - name: List directory contents
         run: ls -la .
+
+      - name: Output compilation-report.xml
+        run: cat compilation-report.xml
 
       - name: Zip artifact
         run: |
