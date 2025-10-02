@@ -89,6 +89,7 @@ jobs:
           --include-data-dir=checkov=checkov \
           --enable-plugin=pylint-warnings \
           --output-filename=checkov-nuitka \
+          --lto=yes \
           --assume-yes-for-downloads \
           --report=compilation-report.xml \
           --debug \
