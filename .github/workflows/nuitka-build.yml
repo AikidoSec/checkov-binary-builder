@@ -89,6 +89,7 @@ jobs:
           --include-package-data=policy_sentry \
           --include-package-data=cloudsplaining \
           --include-data-dir=checkov=checkov \
+          --include-package-data=checkov \
           --enable-plugin=pylint-warnings \
           --output-filename=checkov-nuitka \
           --lto=yes \
@@ -97,6 +98,10 @@ jobs:
           --enable-plugin=anti-bloat \
           --noinclude-pytest-mode=nofollow \
           --noinclude-setuptools-mode=nofollow \
+          --follow-stdlib \
+          --prefer-source-code \
+          --python-flag=no_asserts \
+          --python-flag=-O \
           checkov/main.py
 
       - name: List directory contents
