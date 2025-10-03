@@ -109,21 +109,21 @@ jobs:
           --standalone \
           --follow-imports \
           --output-filename=checkov-nuitka \
-          --include-package=checkov 
-          --include-package-data=checkov 
+          --include-package=checkov \
+          --include-package-data=checkov \
           --include-data-dir=checkov=checkov \
-          --include-package-data=hcl2 
-          --include-package-data=license_expression 
-          --include-package-data=spdx 
+          --include-package-data=hcl2 \
+          --include-package-data=license_expression \
+          --include-package-data=spdx \
           --include-package-data=pycep \
-          --include-package-data=detect_secrets 
-          --include-package-data=policyuniverse 
-          --include-package-data=policy_sentry 
+          --include-package-data=detect_secrets \
+          --include-package-data=policyuniverse \
+          --include-package-data=policy_sentry \
           --include-package-data=cloudsplaining \
-          --include-module=policyuniverse 
-          --include-module=cloudsplaining 
-          --include-package=detect_secrets.plugins 
-          --include-package=policyuniverse.policy 
+          --include-module=policyuniverse \
+          --include-module=cloudsplaining \
+          --include-package=detect_secrets.plugins \
+          --include-package=policyuniverse.policy \
           --include-package=cloudsplaining.scan \
           --lto=yes \
           --assume-yes-for-downloads \
