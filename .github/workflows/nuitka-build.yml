@@ -70,39 +70,64 @@ jobs:
       - name: List directory contents
         run: ls -la .
 
+#  pipenv run python -m nuitka \
+#  --standalone \
+#  --follow-imports \
+#  --include-module=site \
+#  --include-module=checkov \
+#  --include-package=cloudsplaining \
+#  --include-package=detect_secrets.plugins \
+#  --include-package=cloudsplaining.scan \
+#  --include-package=colorama \
+#  --include-package=tqdm \
+#  --include-package-data=hcl2 \
+#  --include-package-data=spdx-tools \
+#  --include-package-data=pycep \
+#  --include-package-data=detect_secrets \
+#  --include-package-data=policyuniverse \
+#  --include-package-data=policy_sentry \
+#  --include-package-data=cloudsplaining \
+#  --include-data-dir=checkov=checkov \
+#  --include-package-data=checkov \
+#  --enable-plugin=pylint-warnings \
+#  --output-filename=checkov-nuitka \
+#  --lto=yes \
+#  --assume-yes-for-downloads \
+#  --report=compilation-report.xml \
+#  --enable-plugin=anti-bloat \
+#  --noinclude-pytest-mode=nofollow \
+#  --noinclude-setuptools-mode=nofollow \
+#  --follow-stdlib \
+#  --prefer-source-code \
+#  --python-flag=no_asserts \
+#  --python-flag=-O \
+#  checkov/main.py
+
       - name: Build executable
         run: |
           pipenv run python -m nuitka \
           --standalone \
           --follow-imports \
-          --include-module=site \
-          --include-module=checkov \
-          --include-package=cloudsplaining \
-          --include-package=detect_secrets.plugins \
-          --include-package=cloudsplaining.scan \
-          --include-package=colorama \
-          --include-package=tqdm \
-          --include-package-data=hcl2 \
-          --include-package-data=spdx-tools \
-          --include-package-data=pycep \
-          --include-package-data=detect_secrets \
-          --include-package-data=policyuniverse \
-          --include-package-data=policy_sentry \
-          --include-package-data=cloudsplaining \
-          --include-data-dir=checkov=checkov \
-          --include-package-data=checkov \
-          --enable-plugin=pylint-warnings \
+          --macos-create-app-bundle=no \
           --output-filename=checkov-nuitka \
+          --include-package=checkov 
+          --include-package-data=checkov 
+          --include-data-dir=checkov=checkov \
+          --include-package-data=hcl2 
+          --include-package-data=license_expression 
+          --include-package-data=spdx 
+          --include-package-data=pycep \
+          --include-package-data=detect_secrets 
+          --include-package-data=policyuniverse 
+          --include-package-data=policy_sentry 
+          --include-package-data=cloudsplaining \
+          --include-module=policyuniverse 
+          --include-module=cloudsplaining 
+          --include-package=detect_secrets.plugins 
+          --include-package=policyuniverse.policy 
+          --include-package=cloudsplaining.scan \
           --lto=yes \
           --assume-yes-for-downloads \
-          --report=compilation-report.xml \
-          --enable-plugin=anti-bloat \
-          --noinclude-pytest-mode=nofollow \
-          --noinclude-setuptools-mode=nofollow \
-          --follow-stdlib \
-          --prefer-source-code \
-          --python-flag=no_asserts \
-          --python-flag=-O \
           checkov/main.py
 
       - name: List directory contents
