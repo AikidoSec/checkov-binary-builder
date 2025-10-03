@@ -76,7 +76,7 @@ jobs:
           --standalone \
           --follow-imports \
           --include-module=site \
-          --include-module=checkov
+          --include-module=checkov \
           --include-package=cloudsplaining \
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
