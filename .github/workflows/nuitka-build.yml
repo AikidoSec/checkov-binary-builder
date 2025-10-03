@@ -108,7 +108,6 @@ jobs:
           pipenv run python -m nuitka \
           --standalone \
           --follow-imports \
-          --macos-create-app-bundle=no \
           --output-filename=checkov-nuitka \
           --include-package=checkov 
           --include-package-data=checkov 
