@@ -124,6 +124,7 @@ jobs:
           --include-package=cloudsplaining.scan \
           --lto=yes \
           --assume-yes-for-downloads \
+          --include-module=checkov.terraform.context_parsers 
           checkov/main.py
 
       - name: List directory contents
