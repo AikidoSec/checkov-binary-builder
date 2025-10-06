@@ -125,7 +125,15 @@ jobs:
           --lto=yes \
           --assume-yes-for-downloads \
           --include-module=checkov.terraform.context_parsers \
+          --include-module=checkov.terraform.checks \
+          --include-module=checkov.terraform.module_loading \
           --include-module=checkov.dockerfile.checks \
+          --include-module=checkov.arm.checks \
+          --include-module=checkov.cloudformation.checks \
+          --include-module=checkov.common.bridgecrew \
+          --include-module=checkov.kubernetes.checks \
+          --include-module=checkov.openapi.checks \
+          --include-module=checkov.serverless.checks \
           checkov/main.py
 
       - name: List directory contents
