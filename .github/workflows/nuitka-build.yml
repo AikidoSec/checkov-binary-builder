@@ -1,5 +1,3 @@
-# Single workflow using Option A (config). Use nuitka-build-config.yml or
-# nuitka-build-cli.yml to test each option separately.
 on:
   push:
     branches:
@@ -33,7 +31,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-14-xlarge
+          - os: macos-13-xlarge
             name: darwin
             suffix: "ARM64"
           - os: ubuntu-22.04
@@ -54,36 +52,23 @@ jobs:
         with:
           repository: bridgecrewio/checkov
           ref: 3.2.473
-          path: checkov-src
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-python@v6 # v6
         with:
-          python-version: "3.9"
+          python-version: 3.8
 
       - name: Install pipenv
         run: |
           python -m pip install --no-cache-dir --upgrade pipenv
 
-      - name: Set Python path for pipenv
-        run: echo "PYTHON_PATH=$(which python)" >> $GITHUB_ENV
-
-      - name: Install dependencies from checkov repo and Nuitka
-        working-directory: checkov-src
+      - name: Install dependencies and Nuitka
         run: |
-          PIPENV_VENV_IN_PROJECT=1 pipenv sync --python "$PYTHON_PATH"
-          pipenv run pip install -e . && pipenv run pip install nuitka
+          pipenv sync
+          pipenv run python -m pip install nuitka
 
-      - name: Discover checkov modules for Nuitka
-        run: checkov-src/.venv/bin/python scripts/discover_checkov_modules.py
-
-      - name: List nuitka-generated
-        run: |
-          ls -la nuitka-generated/
-          head -20 nuitka-generated/nuitka-include-modules.txt
-
-      - name: Patch checkov __init__.py for Nuitka runtime
-        run: python scripts/patch_checkov_for_nuitka.py
+      - name: List directory contents
+        run: ls -la .
 
       #  pipenv run python -m nuitka \
       #  --standalone \
@@ -118,29 +103,47 @@ jobs:
       #  --python-flag=-O \
       #  checkov/main.py
 
-      - name: Build executable (Option A - config)
+      - name: Patch checkov __init__.py for Nuitka runtime
+        run: python scripts/patch_checkov_for_nuitka.py
+
+      - name: Build executable
         run: |
-          checkov-src/.venv/bin/python -m nuitka \
-            --standalone \
-            --follow-imports \
-            --output-filename=checkov-nuitka \
-            --user-package-configuration-file=nuitka-generated/checkov.nuitka-package.config.yml \
-            --include-package=checkov \
-            --include-package-data=checkov \
-            --include-data-dir=checkov-src/checkov=checkov \
-            --include-package-data=hcl2 \
-            --include-package-data=license_expression \
-            --include-package-data=spdx \
-            --include-package-data=pycep \
-            --include-package-data=detect_secrets \
-            --include-package-data=policy_sentry \
-            --include-package-data=cloudsplaining \
-            --include-module=cloudsplaining \
-            --include-package=detect_secrets.plugins \
-            --include-package=cloudsplaining.scan \
-            --lto=yes \
-            --assume-yes-for-downloads \
-            checkov-src/checkov/main.py
+          pipenv run python -m nuitka \
+          --standalone \
+          --follow-imports \
+          --output-filename=checkov-nuitka \
+          --include-package=checkov \
+          --include-package-data=checkov \
+          --include-data-dir=checkov=checkov \
+          --include-package-data=hcl2 \
+          --include-package-data=license_expression \
+          --include-package-data=spdx \
+          --include-package-data=pycep \
+          --include-package-data=detect_secrets \
+          --include-package-data=policy_sentry \
+          --include-package-data=cloudsplaining \
+          --include-module=cloudsplaining \
+          --include-package=detect_secrets.plugins \
+          --include-package=cloudsplaining.scan \
+          --lto=yes \
+          --assume-yes-for-downloads \
+          --include-module=checkov.terraform.context_parsers \
+          --include-module=checkov.terraform.checks \
+          --include-module=checkov.terraform.module_loading \
+          --include-module=checkov.dockerfile.checks \
+          --include-module=checkov.arm.checks \
+          --include-module=checkov.cloudformation.checks \
+          --include-module=checkov.common.bridgecrew \
+          --include-module=checkov.kubernetes.checks \
+          --include-module=checkov.openapi.checks \
+          --include-module=checkov.serverless.checks \
+          checkov/main.py
+
+      - name: List directory contents
+        run: ls -la .
+
+      #      - name: Output compilation-report.xml
+      #        run: cat compilation-report.xml
 
       - name: Test built binary (patch + imports)
         run: |
@@ -154,9 +157,7 @@ jobs:
 
       - name: Zip artifact
         run: |
-          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
-          if [ -z "$DIST_DIR" ]; then echo "No .dist folder found"; exit 1; fi
-          zip -r checkov.zip "$DIST_DIR"
+          zip -r checkov.zip main.dist
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
