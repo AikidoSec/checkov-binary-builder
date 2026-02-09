@@ -1,6 +1,9 @@
 # Single workflow using Option A (config). Use nuitka-build-config.yml or
 # nuitka-build-cli.yml to test each option separately.
 on:
+  push:
+    branches:
+      - nuitka-build
   workflow_dispatch:
 
 name: Build Checkov Binary Using Nuitka
@@ -79,6 +82,9 @@ jobs:
           ls -la nuitka-generated/
           head -20 nuitka-generated/nuitka-include-modules.txt
 
+      - name: Patch checkov __init__.py for Nuitka runtime
+        run: python scripts/patch_checkov_for_nuitka.py
+
       #  pipenv run python -m nuitka \
       #  --standalone \
       #  --follow-imports \
@@ -135,6 +141,16 @@ jobs:
             --lto=yes \
             --assume-yes-for-downloads \
             checkov-src/checkov/main.py
+
+      - name: Test built binary (patch + imports)
+        run: |
+          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
+          if [ -z "$DIST_DIR" ]; then echo "No .dist folder found"; exit 1; fi
+          BIN="$DIST_DIR/checkov-nuitka"
+          echo "=== Version ==="
+          "$BIN" --version
+          echo "=== List terraform checks (exercises patched __init__.py) ==="
+          "$BIN" --list --framework terraform | head -30
 
       - name: Zip artifact
         run: |
