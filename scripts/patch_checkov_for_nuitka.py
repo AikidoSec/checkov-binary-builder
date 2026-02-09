@@ -3,10 +3,11 @@
 Patch checkov's __init__.py files so dynamic __all__ (glob-based) works when
 running as a Nuitka-compiled binary (no .py files on disk).
 
-Run from repo root after discover_checkov_modules.py. Patches the checkov
-source in place so Nuitka compiles the patched code and runtime discovery works.
+Run from repo root after checkout, before Nuitka build. If
+nuitka-generated/nuitka-include-modules.txt exists it is used; otherwise
+modules are discovered by scanning the checkov package on disk (CI-friendly).
 
-No fork required: run this in CI after checkout, before Nuitka build.
+No fork required.
 """
 
 from __future__ import print_function
@@ -16,12 +17,28 @@ from pathlib import Path
 
 
 def load_module_list(path):
-    """Load full module names from discovery output. Returns empty list if file missing (no-op patch)."""
+    """Load full module names from discovery output. Returns empty list if file missing."""
     p = Path(path)
     if not p.exists():
-        print("Warning: module list not found ({}). Skipping __all__ patch.".format(p), file=sys.stderr)
         return []
     return [line.strip() for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def discover_modules_from_fs(checkov_root):
+    """Discover all checkov.* module names by scanning the package directory."""
+    modules = []
+    for path in checkov_root.rglob("*.py"):
+        try:
+            rel = path.relative_to(checkov_root)
+        except ValueError:
+            continue
+        parts = rel.parts
+        if path.name == "__init__.py":
+            module = "checkov." + ".".join(parts[:-1]) if parts[:-1] else "checkov"
+        else:
+            module = "checkov." + ".".join(parts[:-1] + (path.stem,)) if parts[:-1] else "checkov." + path.stem
+        modules.append(module)
+    return sorted(set(modules))
 
 
 def package_from_init_path(init_path, checkov_root):
@@ -135,8 +152,12 @@ def main():
     module_list_path = root / "nuitka-generated" / "nuitka-include-modules.txt"
     modules = load_module_list(module_list_path)
     if not modules:
-        print("No module list; skipping __all__ patches. Add nuitka-generated/nuitka-include-modules.txt for full Nuitka compatibility.")
-        return
+        print("Module list not found ({}); discovering from checkov package.".format(module_list_path), file=sys.stderr)
+        modules = discover_modules_from_fs(checkov_root)
+        if not modules:
+            print("No checkov modules found; skipping __all__ patches.", file=sys.stderr)
+            return
+        print("Discovered {} module(s).".format(len(modules)))
 
     patched = []
     for init_path in checkov_root.rglob("__init__.py"):
