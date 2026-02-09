@@ -29,7 +29,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-13-xlarge
+          - os: macos-14-xlarge
             name: darwin
             suffix: "ARM64"
           - os: ubuntu-22.04
@@ -50,6 +50,7 @@ jobs:
         with:
           repository: bridgecrewio/checkov
           ref: 3.2.473
+          path: checkov-src
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-python@v6 # v6
@@ -63,6 +64,7 @@ jobs:
       - name: Install dependencies and Nuitka
         run: |
           pipenv sync
+          pipenv run pip install -e checkov-src
           pipenv run python -m pip install nuitka
 
       - name: Discover checkov modules for Nuitka
@@ -82,7 +84,7 @@ jobs:
             --user-package-configuration-file=nuitka-generated/checkov.nuitka-package.config.yml \
             --include-package=checkov \
             --include-package-data=checkov \
-            --include-data-dir=checkov=checkov \
+            --include-data-dir=checkov=checkov-src/checkov \
             --include-package-data=hcl2 \
             --include-package-data=license_expression \
             --include-package-data=spdx \
