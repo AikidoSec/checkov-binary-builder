@@ -66,7 +66,7 @@ jobs:
 
       - name: Install dependencies from checkov repo and Nuitka
         run: |
-          cd checkov-src && PIPENV_VENV_IN_PROJECT=1 pipenv sync
+          cd checkov-src && PIPENV_VENV_IN_PROJECT=1 pipenv sync --python $(which python)
           cd checkov-src && pipenv run pip install -e . && pipenv run pip install nuitka
 
       - name: Discover checkov modules for Nuitka
