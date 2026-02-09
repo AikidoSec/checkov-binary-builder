@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-13-xlarge
+          - os: macos-14-xlarge
             name: darwin
             suffix: "ARM64"
           - os: ubuntu-22.04
@@ -52,6 +52,7 @@ jobs:
         with:
           repository: bridgecrewio/checkov
           ref: 3.2.473
+          path: checkov-src
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-python@v6 # v6
@@ -63,12 +64,13 @@ jobs:
           python -m pip install --no-cache-dir --upgrade pipenv
 
       - name: Install dependencies and Nuitka
+        working-directory: checkov-src
         run: |
           pipenv sync
           pipenv run python -m pip install nuitka
 
       - name: List directory contents
-        run: ls -la .
+        run: ls -la . && ls -la checkov-src
 
       #  pipenv run python -m nuitka \
       #  --standalone \
@@ -107,6 +109,7 @@ jobs:
         run: python scripts/patch_checkov_for_nuitka.py
 
       - name: Build executable
+        working-directory: checkov-src
         run: |
           pipenv run python -m nuitka \
           --standalone \
@@ -140,12 +143,13 @@ jobs:
           checkov/main.py
 
       - name: List directory contents
-        run: ls -la .
+        run: ls -la checkov-src
 
       #      - name: Output compilation-report.xml
       #        run: cat compilation-report.xml
 
       - name: Test built binary (patch + imports)
+        working-directory: checkov-src
         run: |
           DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
           if [ -z "$DIST_DIR" ]; then echo "No .dist folder found"; exit 1; fi
@@ -156,8 +160,10 @@ jobs:
           "$BIN" --list --framework terraform | head -30
 
       - name: Zip artifact
+        working-directory: checkov-src
         run: |
-          zip -r checkov.zip main.dist
+          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
+          zip -r checkov.zip "$DIST_DIR"
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -165,6 +171,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.github-release.outputs.upload_url }}
-          asset_path: checkov.zip
+          asset_path: checkov-src/checkov.zip
           asset_name: checkov_${{ matrix.name }}_${{ matrix.suffix }}.zip
           asset_content_type: application/zip

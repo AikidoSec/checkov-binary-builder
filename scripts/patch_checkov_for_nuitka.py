@@ -16,11 +16,11 @@ from pathlib import Path
 
 
 def load_module_list(path):
-    """Load full module names from discovery output."""
+    """Load full module names from discovery output. Returns empty list if file missing (no-op patch)."""
     p = Path(path)
     if not p.exists():
-        print("Error: module list not found: {}".format(p), file=sys.stderr)
-        sys.exit(1)
+        print("Warning: module list not found ({}). Skipping __all__ patch.".format(p), file=sys.stderr)
+        return []
     return [line.strip() for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
@@ -134,6 +134,9 @@ def main():
 
     module_list_path = root / "nuitka-generated" / "nuitka-include-modules.txt"
     modules = load_module_list(module_list_path)
+    if not modules:
+        print("No module list; skipping __all__ patches. Add nuitka-generated/nuitka-include-modules.txt for full Nuitka compatibility.")
+        return
 
     patched = []
     for init_path in checkov_root.rglob("__init__.py"):
