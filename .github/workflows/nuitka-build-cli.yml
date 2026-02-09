@@ -68,9 +68,10 @@ jobs:
         run: echo "PYTHON_PATH=$(which python)" >> $GITHUB_ENV
 
       - name: Install dependencies from checkov repo and Nuitka
+        working-directory: checkov-src
         run: |
-          cd checkov-src && PIPENV_VENV_IN_PROJECT=1 pipenv sync --python "$PYTHON_PATH"
-          cd checkov-src && pipenv run pip install -e . && pipenv run pip install nuitka
+          PIPENV_VENV_IN_PROJECT=1 pipenv sync --python "$PYTHON_PATH"
+          pipenv run pip install -e . && pipenv run pip install nuitka
 
       - name: Discover checkov modules for Nuitka
         run: checkov-src/.venv/bin/python scripts/discover_checkov_modules.py
