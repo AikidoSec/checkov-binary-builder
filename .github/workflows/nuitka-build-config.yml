@@ -100,7 +100,7 @@ jobs:
             --include-package=cloudsplaining.scan \
             --lto=yes \
             --assume-yes-for-downloads \
-            checkov/main.py
+            checkov-src/checkov/main.py
 
       - name: Zip artifact
         run: |

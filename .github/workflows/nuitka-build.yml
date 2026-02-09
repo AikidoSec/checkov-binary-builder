@@ -32,29 +32,29 @@ jobs:
         include:
           - os: macos-14-xlarge
             name: darwin
-            suffix: 'ARM64'
+            suffix: "ARM64"
           - os: ubuntu-22.04
             name: linux
-            suffix: 'X86_64'
+            suffix: "X86_64"
     needs: [github-release]
     if: needs.github-release.outputs.upload_url != ''
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
         with:
           repository: bridgecrewio/checkov
           ref: 3.2.473
           path: checkov-src
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-python@v6  # v6
+      - uses: actions/setup-python@v6 # v6
         with:
           python-version: "3.9"
 
@@ -79,38 +79,38 @@ jobs:
           ls -la nuitka-generated/
           head -20 nuitka-generated/nuitka-include-modules.txt
 
-#  pipenv run python -m nuitka \
-#  --standalone \
-#  --follow-imports \
-#  --include-module=site \
-#  --include-module=checkov \
-#  --include-package=cloudsplaining \
-#  --include-package=detect_secrets.plugins \
-#  --include-package=cloudsplaining.scan \
-#  --include-package=colorama \
-#  --include-package=tqdm \
-#  --include-package-data=hcl2 \
-#  --include-package-data=spdx-tools \
-#  --include-package-data=pycep \
-#  --include-package-data=detect_secrets \
-#  --include-package-data=policyuniverse \
-#  --include-package-data=policy_sentry \
-#  --include-package-data=cloudsplaining \
-#  --include-data-dir=checkov=checkov \
-#  --include-package-data=checkov \
-#  --enable-plugin=pylint-warnings \
-#  --output-filename=checkov-nuitka \
-#  --lto=yes \
-#  --assume-yes-for-downloads \
-#  --report=compilation-report.xml \
-#  --enable-plugin=anti-bloat \
-#  --noinclude-pytest-mode=nofollow \
-#  --noinclude-setuptools-mode=nofollow \
-#  --follow-stdlib \
-#  --prefer-source-code \
-#  --python-flag=no_asserts \
-#  --python-flag=-O \
-#  checkov/main.py
+      #  pipenv run python -m nuitka \
+      #  --standalone \
+      #  --follow-imports \
+      #  --include-module=site \
+      #  --include-module=checkov \
+      #  --include-package=cloudsplaining \
+      #  --include-package=detect_secrets.plugins \
+      #  --include-package=cloudsplaining.scan \
+      #  --include-package=colorama \
+      #  --include-package=tqdm \
+      #  --include-package-data=hcl2 \
+      #  --include-package-data=spdx-tools \
+      #  --include-package-data=pycep \
+      #  --include-package-data=detect_secrets \
+      #  --include-package-data=policyuniverse \
+      #  --include-package-data=policy_sentry \
+      #  --include-package-data=cloudsplaining \
+      #  --include-data-dir=checkov=checkov \
+      #  --include-package-data=checkov \
+      #  --enable-plugin=pylint-warnings \
+      #  --output-filename=checkov-nuitka \
+      #  --lto=yes \
+      #  --assume-yes-for-downloads \
+      #  --report=compilation-report.xml \
+      #  --enable-plugin=anti-bloat \
+      #  --noinclude-pytest-mode=nofollow \
+      #  --noinclude-setuptools-mode=nofollow \
+      #  --follow-stdlib \
+      #  --prefer-source-code \
+      #  --python-flag=no_asserts \
+      #  --python-flag=-O \
+      #  checkov/main.py
 
       - name: Build executable (Option A - config)
         run: |
@@ -134,7 +134,7 @@ jobs:
             --include-package=cloudsplaining.scan \
             --lto=yes \
             --assume-yes-for-downloads \
-            checkov/main.py
+            checkov-src/checkov/main.py
 
       - name: Zip artifact
         run: |
