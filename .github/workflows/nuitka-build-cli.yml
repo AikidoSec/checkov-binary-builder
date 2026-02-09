@@ -94,7 +94,7 @@ jobs:
             $INCLUDE_MODULES \
             --include-package=checkov \
             --include-package-data=checkov \
-            --include-data-dir=checkov=checkov-src/checkov \
+            --include-data-dir=checkov-src/checkov=checkov \
             --include-package-data=hcl2 \
             --include-package-data=license_expression \
             --include-package-data=spdx \
