@@ -1,5 +1,8 @@
 # Option B: include dynamic modules via CLI --include-module flags
 on:
+  push:
+    branches:
+      - nuitka-build
   workflow_dispatch:
 
 name: Nuitka Build (Option B - CLI)
