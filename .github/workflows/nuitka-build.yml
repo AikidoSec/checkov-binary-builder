@@ -62,9 +62,12 @@ jobs:
         run: |
           python -m pip install --no-cache-dir --upgrade pipenv
 
+      - name: Set Python path for pipenv
+        run: echo "PYTHON_PATH=$(which python)" >> $GITHUB_ENV
+
       - name: Install dependencies from checkov repo and Nuitka
         run: |
-          cd checkov-src && PIPENV_VENV_IN_PROJECT=1 pipenv sync --python $(which python)
+          cd checkov-src && PIPENV_VENV_IN_PROJECT=1 pipenv sync --python "$PYTHON_PATH"
           cd checkov-src && pipenv run pip install -e . && pipenv run pip install nuitka
 
       - name: Discover checkov modules for Nuitka
