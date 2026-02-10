@@ -15,11 +15,12 @@ No fork required.
 
 import sys
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 # --- Module discovery ---
 
 
-def load_module_list(path: Path) -> list[str]:
+def load_module_list(path: Path) -> List[str]:
     """Load full module names from file. Returns [] if file missing."""
     if not path.exists():
         return []
@@ -39,7 +40,7 @@ def path_to_module(path: Path, checkov_root: Path) -> str:
     return name
 
 
-def discover_modules(checkov_root: Path) -> list[str]:
+def discover_modules(checkov_root: Path) -> List[str]:
     """Discover all checkov.* module names by scanning the package directory."""
     modules = []
     for path in checkov_root.rglob("*.py"):
@@ -51,7 +52,7 @@ def discover_modules(checkov_root: Path) -> list[str]:
     return sorted(set(modules))
 
 
-def init_path_to_package(init_path: Path, checkov_root: Path) -> str | None:
+def init_path_to_package(init_path: Path, checkov_root: Path) -> Optional[str]:
     """e.g. checkov/terraform/checks/__init__.py -> checkov.terraform.checks."""
     try:
         rel = init_path.parent.relative_to(checkov_root)
@@ -60,7 +61,7 @@ def init_path_to_package(init_path: Path, checkov_root: Path) -> str | None:
     return "checkov." + ".".join(rel.parts) if rel.parts else "checkov"
 
 
-def direct_children(prefix: str, modules: list[str]) -> list[str]:
+def direct_children(prefix: str, modules: List[str]) -> List[str]:
     """Immediate submodule names (e.g. checkov.terraform.checks -> [resource, graph_checks])."""
     prefix_dot = prefix + "."
     depth = len(prefix.split("."))
@@ -106,7 +107,7 @@ def _is_all_line_with_glob(line: str) -> bool:
     )
 
 
-def replace_glob_all_with_static(content: str, static_all: list[str]) -> tuple[str, bool]:
+def replace_glob_all_with_static(content: str, static_all: List[str]) -> Tuple[str, bool]:
     """
     Replace the glob/pathlib __all__ block with a static list.
     Returns (new_content, True) if replaced, (content, False) otherwise.
@@ -143,7 +144,7 @@ def replace_glob_all_with_static(content: str, static_all: list[str]) -> tuple[s
     return content, False
 
 
-def _path_under_root(path: Path, root: Path) -> Path | None:
+def _path_under_root(path: Path, root: Path) -> Optional[Path]:
     """Return resolved path if it is under root; else None. Used to constrain file writes."""
     try:
         resolved = path.resolve()
@@ -153,7 +154,7 @@ def _path_under_root(path: Path, root: Path) -> Path | None:
         return None
 
 
-def patch_one_init(init_path: Path, package: str, modules: list[str], checkov_root: Path) -> bool:
+def patch_one_init(init_path: Path, package: str, modules: List[str], checkov_root: Path) -> bool:
     """Patch one __init__.py if it uses glob-based __all__. Returns True if patched."""
     safe_path = _path_under_root(init_path, checkov_root)
     if safe_path is None:
@@ -178,7 +179,7 @@ def patch_one_init(init_path: Path, package: str, modules: list[str], checkov_ro
 # --- Main ---
 
 
-def find_checkov_root(root: Path) -> Path | None:
+def find_checkov_root(root: Path) -> Optional[Path]:
     """Resolve checkov package dir (checkov-src/checkov or checkov/)."""
     for candidate in (root / "checkov-src" / "checkov", root / "checkov"):
         if candidate.is_dir():
