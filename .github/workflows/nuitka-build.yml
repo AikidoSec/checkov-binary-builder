@@ -50,8 +50,8 @@ jobs:
 
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
         with:
-          repository: bridgecrewio/checkov
-          ref: 3.2.473
+          repository: AikidoSec/checkov
+          ref: aik-2025-15
           path: checkov-src
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -109,7 +109,7 @@ jobs:
         run: python scripts/patch_checkov_for_nuitka.py
 
       - name: Copy Nuitka wrapper entry (import random before checkov/numpy)
-        run: cp scripts/entry_nuitka.py checkov-src/entry_nuitka.py
+        run: cp scripts/main.py checkov-src/main.py
 
       - name: Build executable
         working-directory: checkov-src
@@ -117,6 +117,7 @@ jobs:
           # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
           # Plugin numpy improves numpy C-extension and random.randbits resolution in standalone
           # Entry script imports random first so numpy.random.bit_generator finds randbits
+          # Output: main.dist/checkov (same names as official Checkov binary)
           pipenv run python -m nuitka \
           --standalone \
           --follow-imports \
@@ -131,7 +132,7 @@ jobs:
           --include-module=decimal \
           --include-module=operator \
           --include-module=math \
-          --output-filename=checkov-nuitka \
+          --output-filename=checkov \
           --include-package=checkov \
           --include-package-data=checkov \
           --include-data-dir=checkov=checkov \
@@ -157,10 +158,18 @@ jobs:
           --include-module=checkov.kubernetes.checks \
           --include-module=checkov.openapi.checks \
           --include-module=checkov.serverless.checks \
-          entry_nuitka.py
+          main.py
 
       - name: List directory contents
         run: ls -la checkov-src
+
+      - name: Sign macOS binaries (required for .so/.dylib to load)
+        if: matrix.name == 'darwin'
+        working-directory: checkov-src
+        run: |
+          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
+          find "$DIST_DIR" -type f \( -name "*.so" -o -name "*.dylib" \) -print -exec codesign --force --sign - {} \;
+          codesign --force --sign - "$DIST_DIR/checkov"
 
       #      - name: Output compilation-report.xml
       #        run: cat compilation-report.xml
@@ -170,7 +179,7 @@ jobs:
         run: |
           DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
           if [ -z "$DIST_DIR" ]; then echo "No .dist folder found"; exit 1; fi
-          BIN="$DIST_DIR/checkov-nuitka"
+          BIN="$DIST_DIR/checkov"
           echo "=== Version ==="
           "$BIN" --version
           echo "=== List terraform checks (exercises patched __init__.py) ==="

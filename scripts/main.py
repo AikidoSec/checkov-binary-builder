@@ -15,5 +15,9 @@ import sys
 if __name__ == "__main__":
     import checkov.main as checkov_main
 
-    exit_code = checkov_main.Checkov().run()
-    sys.exit(exit_code if exit_code is not None else 0)
+    try:
+        exit_code = checkov_main.Checkov().run()
+        sys.exit(exit_code if exit_code is not None else 0)
+    except BrokenPipeError:
+        # Stdout was closed (e.g. pipe to head). Exit cleanly.
+        sys.exit(0)
