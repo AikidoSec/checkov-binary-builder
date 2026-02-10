@@ -111,10 +111,20 @@ jobs:
       - name: Build executable
         working-directory: checkov-src
         run: |
+          # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
           pipenv run python -m nuitka \
           --standalone \
           --follow-imports \
           --prefer-source-code \
+          --include-module=random \
+          --include-module=secrets \
+          --include-module=struct \
+          --include-module=warnings \
+          --include-module=functools \
+          --include-module=copy \
+          --include-module=decimal \
+          --include-module=operator \
+          --include-module=math \
           --output-filename=checkov-nuitka \
           --include-package=checkov \
           --include-package-data=checkov \
