@@ -108,13 +108,19 @@ jobs:
       - name: Patch checkov __init__.py for Nuitka runtime
         run: python scripts/patch_checkov_for_nuitka.py
 
+      - name: Copy Nuitka wrapper entry (import random before checkov/numpy)
+        run: cp scripts/entry_nuitka.py checkov-src/entry_nuitka.py
+
       - name: Build executable
         working-directory: checkov-src
         run: |
           # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
+          # Plugin numpy improves numpy C-extension and random.randbits resolution in standalone
+          # Entry script imports random first so numpy.random.bit_generator finds randbits
           pipenv run python -m nuitka \
           --standalone \
           --follow-imports \
+          --plugin-enable=numpy \
           --prefer-source-code \
           --include-module=random \
           --include-module=secrets \
@@ -151,7 +157,7 @@ jobs:
           --include-module=checkov.kubernetes.checks \
           --include-module=checkov.openapi.checks \
           --include-module=checkov.serverless.checks \
-          checkov/main.py
+          entry_nuitka.py
 
       - name: List directory contents
         run: ls -la checkov-src
