@@ -132,12 +132,9 @@ jobs:
       - name: Build executable
         working-directory: checkov-src
         run: |
-          # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
-          # Plugin numpy improves numpy C-extension and random.randbits resolution in standalone
-          # Entry script imports random first so numpy.random.bit_generator finds randbits
-          # Output: main.dist/checkov (same names as official Checkov binary)
           pipenv run python -m nuitka \
           --standalone \
+          --onefile \
           --follow-imports \
           --prefer-source-code \
           --include-module=random \
@@ -149,7 +146,7 @@ jobs:
           --include-module=decimal \
           --include-module=operator \
           --include-module=math \
-          --output-filename=checkov \
+          --output-filename=checkov_run \
           --include-package=checkov \
           --include-package-data=checkov \
           --include-package-data=hcl2 \
@@ -176,6 +173,17 @@ jobs:
           --include-module=checkov.serverless.checks \
           main.py
 
+      - name: Rename binary to checkov
+        working-directory: checkov-src
+        run: |
+          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
+          if [ -z "$DIST_DIR" ]; then echo "No .dist folder found"; exit 1; fi
+          if [ -f "$DIST_DIR/checkov_run.exe" ]; then
+            mv "$DIST_DIR/checkov_run.exe" "$DIST_DIR/checkov.exe"
+          else
+            mv "$DIST_DIR/checkov_run" "$DIST_DIR/checkov"
+          fi
+
       - name: List directory contents
         run: ls -la checkov-src
 
@@ -197,7 +205,8 @@ jobs:
         working-directory: checkov-src
         run: |
           DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
-          zip -r checkov.zip "$DIST_DIR"
+          if [ -f "$DIST_DIR/checkov.exe" ]; then BIN="$DIST_DIR/checkov.exe"; else BIN="$DIST_DIR/checkov"; fi
+          zip -j checkov.zip "$BIN"
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
