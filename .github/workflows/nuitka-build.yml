@@ -66,7 +66,7 @@ jobs:
       - name: Install dependencies and Nuitka
         working-directory: checkov-src
         run: |
-          pipenv sync
+          pipenv sync --python 3.8
           pipenv run python -m pip install "nuitka>=1.9,<4"
 
       - name: List directory contents
@@ -162,14 +162,6 @@ jobs:
 
       - name: List directory contents
         run: ls -la checkov-src
-
-      - name: Sign macOS binaries (required for .so/.dylib to load)
-        if: matrix.name == 'darwin'
-        working-directory: checkov-src
-        run: |
-          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
-          find "$DIST_DIR" -type f \( -name "*.so" -o -name "*.dylib" \) -print -exec codesign --force --sign - {} \;
-          codesign --force --sign - "$DIST_DIR/checkov"
 
       #      - name: Output compilation-report.xml
       #        run: cat compilation-report.xml
