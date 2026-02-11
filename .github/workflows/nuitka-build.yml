@@ -173,16 +173,17 @@ jobs:
           --include-module=checkov.serverless.checks \
           main.py
 
+      - name: List directory contents
+        run: ls -la checkov-src
+
       - name: Rename binary to checkov
         working-directory: checkov-src
         run: |
           DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
-          if [ -z "$DIST_DIR" ]; then echo "No .dist folder found"; exit 1; fi
-          if [ -f "$DIST_DIR/checkov_run.exe" ]; then
-            mv "$DIST_DIR/checkov_run.exe" "$DIST_DIR/checkov.exe"
-          else
-            mv "$DIST_DIR/checkov_run" "$DIST_DIR/checkov"
-          fi
+          [ -z "$DIST_DIR" ] && { echo "No .dist folder found"; exit 1; }
+          SRC="$DIST_DIR/checkov_run"; [ -f "${SRC}.exe" ] && SRC="${SRC}.exe"
+          OUT="$DIST_DIR/checkov"; [[ "$SRC" == *.exe ]] && OUT="${OUT}.exe"
+          mv "$SRC" "$DIST_DIR/_bin" && rm -rf "$DIST_DIR/checkov" "$DIST_DIR/checkov.exe" && mv "$DIST_DIR/_bin" "$OUT"
 
       - name: List directory contents
         run: ls -la checkov-src
