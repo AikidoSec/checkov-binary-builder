@@ -31,15 +31,43 @@ jobs:
     strategy:
       matrix:
         include:
+          # macOS ARM64 (Apple Silicon)
           - os: macos-14-xlarge
             name: darwin
             suffix: "ARM64"
+          # macOS Intel (x86_64)
+          - os: macos-13
+            name: darwin
+            suffix: "X86_64"
+          # Linux x86_64
           - os: ubuntu-22.04
             name: linux
             suffix: "X86_64"
+          # Linux ARM64
+          - os: ubuntu-22.04-arm
+            name: linux
+            suffix: "ARM64"
+          # Windows x64
+          - os: windows-latest
+            name: windows
+            suffix: "X86_64"
+            python_arch: "x64"
+          # Windows 32-bit (uses 32-bit Python on x64 runner)
+          - os: windows-latest
+            name: windows
+            suffix: "X86"
+            python_arch: "x86"
+          # Windows ARM64
+          - os: windows-11-arm
+            name: windows
+            suffix: "ARM64"
     needs: [github-release]
     if: needs.github-release.outputs.upload_url != ''
     runs-on: ${{ matrix.os }}
+    # Windows: use bash so Unix commands (find, zip) work; optional architecture for 32-bit Python
+    defaults:
+      run:
+        shell: bash
     permissions:
       contents: write
     steps:
@@ -56,8 +84,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-python@v6 # v6
+        if: matrix.python_arch == ''
         with:
           python-version: 3.8
+      - uses: actions/setup-python@v6 # v6
+        if: matrix.python_arch != ''
+        with:
+          python-version: 3.8
+          architecture: ${{ matrix.python_arch }}
 
       - name: Install pipenv
         run: |
@@ -71,39 +105,6 @@ jobs:
 
       - name: List directory contents
         run: ls -la . && ls -la checkov-src
-
-      #  pipenv run python -m nuitka \
-      #  --standalone \
-      #  --follow-imports \
-      #  --include-module=site \
-      #  --include-module=checkov \
-      #  --include-package=cloudsplaining \
-      #  --include-package=detect_secrets.plugins \
-      #  --include-package=cloudsplaining.scan \
-      #  --include-package=colorama \
-      #  --include-package=tqdm \
-      #  --include-package-data=hcl2 \
-      #  --include-package-data=spdx-tools \
-      #  --include-package-data=pycep \
-      #  --include-package-data=detect_secrets \
-      #  --include-package-data=policyuniverse \
-      #  --include-package-data=policy_sentry \
-      #  --include-package-data=cloudsplaining \
-      #  --include-data-dir=checkov=checkov \
-      #  --include-package-data=checkov \
-      #  --enable-plugin=pylint-warnings \
-      #  --output-filename=checkov-nuitka \
-      #  --lto=yes \
-      #  --assume-yes-for-downloads \
-      #  --report=compilation-report.xml \
-      #  --enable-plugin=anti-bloat \
-      #  --noinclude-pytest-mode=nofollow \
-      #  --noinclude-setuptools-mode=nofollow \
-      #  --follow-stdlib \
-      #  --prefer-source-code \
-      #  --python-flag=no_asserts \
-      #  --python-flag=-O \
-      #  checkov/main.py
 
       - name: Patch checkov __init__.py for Nuitka runtime
         run: python scripts/patch_checkov_for_nuitka.py
@@ -121,7 +122,6 @@ jobs:
           pipenv run python -m nuitka \
           --standalone \
           --follow-imports \
-          --plugin-enable=numpy \
           --prefer-source-code \
           --include-module=random \
           --include-module=secrets \
@@ -135,7 +135,6 @@ jobs:
           --output-filename=checkov \
           --include-package=checkov \
           --include-package-data=checkov \
-          --include-data-dir=checkov=checkov \
           --include-package-data=hcl2 \
           --include-package-data=license_expression \
           --include-package-data=spdx_tools \
@@ -171,7 +170,7 @@ jobs:
         run: |
           DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
           if [ -z "$DIST_DIR" ]; then echo "No .dist folder found"; exit 1; fi
-          BIN="$DIST_DIR/checkov"
+          if [ -f "$DIST_DIR/checkov.exe" ]; then BIN="$DIST_DIR/checkov.exe"; else BIN="$DIST_DIR/checkov"; fi
           echo "=== Version ==="
           "$BIN" --version
           echo "=== List terraform checks (exercises patched __init__.py) ==="
