@@ -37,8 +37,8 @@ jobs:
             suffix: "ARM64"
             python_arch: "arm64"
             python_version: "3.8"
-          # macOS Intel (x86_64)
-          - os: macos-13
+          # macOS Intel (x86_64) — macos-13 deprecated; use macos-14-large for x86_64
+          - os: macos-14-large
             name: darwin
             suffix: "X86_64"
             python_arch: "x64"
