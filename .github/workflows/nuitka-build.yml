@@ -180,13 +180,13 @@ jobs:
       - name: List directory contents
         run: ls -la checkov-src
 
-      - name: Move binary to dist/checkov (avoid collision with checkov package dir)
+      - name: Move binary to dist/checkov
         working-directory: checkov-src
         run: |
-          SRC=$(find . -maxdepth 2 -type f \( -name 'checkov_run' -o -name 'checkov_run.exe' \) | head -1)
-          [ -z "$SRC" ] && { echo "checkov_run not found"; exit 1; }
+          SRC=$(find . -maxdepth 2 -type f \( -name 'checkov-nuitka' -o -name 'checkov-nuitka.exe' \) | head -1)
+          [ -z "$SRC" ] && { echo "checkov-nuitka not found"; exit 1; }
           mkdir -p dist
-          DEST="dist/$(basename "$SRC" | sed 's/checkov_run/checkov/')"
+          DEST="dist/$(basename "$SRC" | sed 's/checkov-nuitka/checkov/')"
           mv "$SRC" "$DEST"
 
       - name: Remove Nuitka build artifacts (onefile output already in dist/)
