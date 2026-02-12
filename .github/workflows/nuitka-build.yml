@@ -118,7 +118,7 @@ jobs:
         working-directory: checkov-src
         run: |
           pipenv sync --python ${{ matrix.python_version }}
-          pipenv run python -m pip install "nuitka>=1.9,<4" "typing_extensions"
+          pipenv run python -m pip install "nuitka>=1.9,<4" "typing_extensions" "async_timeout" "aiohttp" "openai"
 
       - name: List directory contents
         run: ls -la . && ls -la checkov-src
@@ -150,6 +150,9 @@ jobs:
           --include-module=operator \
           --include-module=math \
           --include-package=typing_extensions \
+          --include-package=async_timeout \
+          --include-package=aiohttp \
+          --include-package=openai \
           --output-filename=checkov-nuitka \
           --include-package=checkov \
           --include-package-data=checkov \
