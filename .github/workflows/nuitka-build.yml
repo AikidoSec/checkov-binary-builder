@@ -138,6 +138,7 @@ jobs:
           --standalone \
           --onefile \
           --follow-imports \
+          --plugin-enable=numpy \
           --prefer-source-code \
           --include-module=random \
           --include-module=secrets \
@@ -148,15 +149,14 @@ jobs:
           --include-module=decimal \
           --include-module=operator \
           --include-module=math \
-          --output-filename=checkov_run \
+          --output-filename=checkov-nuitka \
           --include-package=checkov \
           --include-package-data=checkov \
+          --include-data-dir=checkov=checkov \
           --include-package-data=hcl2 \
           --include-package-data=license_expression \
-          --include-module=spdx \
-          --include-module=pycep \
-          --include-module=bc_jsonpath_ng \
-          --include-module=lark \
+          --include-package-data=spdx_tools \
+          --include-package-data=pycep \
           --include-package-data=detect_secrets \
           --include-package-data=policy_sentry \
           --include-package-data=cloudsplaining \
