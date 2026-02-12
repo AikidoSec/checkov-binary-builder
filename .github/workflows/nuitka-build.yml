@@ -36,37 +36,37 @@ jobs:
             name: darwin
             suffix: "ARM64"
             python_arch: "arm64"
-            python_version: "3.9"
+            python_version: "3.8"
           # macOS Intel (x86_64) — macos-13 deprecated; use macos-14-large for x86_64
           - os: macos-14-large
             name: darwin
             suffix: "X86_64"
             python_arch: "x64"
-            python_version: "3.9"
+            python_version: "3.8"
           # Linux x86_64
           - os: ubuntu-22.04
             name: linux
             suffix: "X86_64"
             python_arch: "x64"
-            python_version: "3.9"
+            python_version: "3.8"
           # Linux ARM64
           - os: ubuntu-22.04-arm
             name: linux
             suffix: "ARM64"
             python_arch: "arm64"
-            python_version: "3.9"
+            python_version: "3.8"
           # Windows x64
           - os: windows-latest
             name: windows
             suffix: "X86_64"
             python_arch: "x64"
-            python_version: "3.9"
+            python_version: "3.8"
           # Windows 32-bit (uses 32-bit Python on x64 runner)
           - os: windows-latest
             name: windows
             suffix: "X86"
             python_arch: "x86"
-            python_version: "3.9"
+            python_version: "3.8"
           # Windows ARM64 (Python 3.9 not available for win32+arm64; use 3.12 + manual install)
           - os: windows-11-arm
             name: windows
@@ -90,8 +90,8 @@ jobs:
 
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
         with:
-          repository: AikidoSec/checkov
-          ref: aik-2025-15
+          repository: bridgecrewio/checkov
+          ref: 3.2.501
           path: checkov-src
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -118,7 +118,7 @@ jobs:
         working-directory: checkov-src
         run: |
           pipenv sync --python ${{ matrix.python_version }}
-          pipenv run python -m pip install "nuitka>=1.9,<4" "typing_extensions" "async_timeout" "aiohttp" "openai"
+          pipenv run python -m pip install "nuitka>=1.9,<4"
 
       - name: List directory contents
         run: ls -la . && ls -la checkov-src
@@ -134,6 +134,9 @@ jobs:
       - name: Build executable
         working-directory: checkov-src
         run: |
+          # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
+          # Plugin numpy improves numpy C-extension and random.randbits resolution in standalone
+          # Entry script imports random first so numpy.random.bit_generator finds randbits
           pipenv run python -m nuitka \
           --standalone \
           --onefile \
@@ -149,10 +152,6 @@ jobs:
           --include-module=decimal \
           --include-module=operator \
           --include-module=math \
-          --include-package=typing_extensions \
-          --include-package=async_timeout \
-          --include-package=aiohttp \
-          --include-package=openai \
           --output-filename=checkov-nuitka \
           --include-package=checkov \
           --include-package-data=checkov \
