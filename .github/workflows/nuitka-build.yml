@@ -179,11 +179,9 @@ jobs:
       - name: Rename binary to checkov
         working-directory: checkov-src
         run: |
-          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
-          [ -z "$DIST_DIR" ] && { echo "No .dist folder found"; exit 1; }
-          SRC="$DIST_DIR/checkov_run"; [ -f "${SRC}.exe" ] && SRC="${SRC}.exe"
-          OUT="$DIST_DIR/checkov"; [[ "$SRC" == *.exe ]] && OUT="${OUT}.exe"
-          mv "$SRC" "$DIST_DIR/_bin" && rm -rf "$DIST_DIR/checkov" "$DIST_DIR/checkov.exe" && mv "$DIST_DIR/_bin" "$OUT"
+          SRC=$(find . -maxdepth 2 -type f \( -name 'checkov_run' -o -name 'checkov_run.exe' \) | head -1)
+          [ -z "$SRC" ] && { echo "checkov_run not found"; exit 1; }
+          mv "$SRC" "${SRC/checkov_run/checkov}"
 
       - name: List directory contents
         run: ls -la checkov-src
@@ -194,9 +192,8 @@ jobs:
       - name: Test built binary (patch + imports)
         working-directory: checkov-src
         run: |
-          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
-          if [ -z "$DIST_DIR" ]; then echo "No .dist folder found"; exit 1; fi
-          if [ -f "$DIST_DIR/checkov.exe" ]; then BIN="$DIST_DIR/checkov.exe"; else BIN="$DIST_DIR/checkov"; fi
+          BIN=$(find . -maxdepth 2 -type f \( -name 'checkov' -o -name 'checkov.exe' \) | head -1)
+          [ -z "$BIN" ] || [ ! -f "$BIN" ] && { echo "checkov not found"; exit 1; }
           echo "=== Version ==="
           "$BIN" --version
           echo "=== List terraform checks (exercises patched __init__.py) ==="
@@ -205,9 +202,15 @@ jobs:
       - name: Zip artifact
         working-directory: checkov-src
         run: |
-          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
-          if [ -f "$DIST_DIR/checkov.exe" ]; then BIN="$DIST_DIR/checkov.exe"; else BIN="$DIST_DIR/checkov"; fi
+          BIN=$(find . -maxdepth 2 -type f \( -name 'checkov' -o -name 'checkov.exe' \) | head -1)
+          [ -z "$BIN" ] || [ ! -f "$BIN" ] && { echo "checkov not found"; exit 1; }
           zip -j checkov.zip "$BIN"
+          echo "Zip contents:"
+          unzip -l checkov.zip
+          ZIP_FILES=$(unzip -Z1 checkov.zip)
+          ZIP_COUNT=$(echo "$ZIP_FILES" | wc -l)
+          [ "$ZIP_COUNT" -eq 1 ] || { echo "zip must contain exactly one file, got $ZIP_COUNT"; exit 1; }
+          echo "$ZIP_FILES" | grep -q '/' && { echo "zip must not contain paths/folders: $ZIP_FILES"; exit 1; }
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
