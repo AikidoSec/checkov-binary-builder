@@ -192,6 +192,16 @@ jobs:
           DEST="dist/$(basename "$SRC" | sed 's/checkov-nuitka/checkov/')"
           mv "$SRC" "$DEST"
 
+      - name: Test built binary (patch + imports)
+        working-directory: checkov-src
+        run: |
+          BIN=$(find ./dist -maxdepth 1 -type f \( -name 'checkov' -o -name 'checkov.exe' \) | head -1)
+          [ -z "$BIN" ] || [ ! -f "$BIN" ] && { echo "checkov not found in dist/"; exit 1; }
+          echo "=== Version ==="
+          "$BIN" --version
+          echo "=== List terraform checks (exercises patched __init__.py) ==="
+          "$BIN" --list --framework terraform | head -30
+
       - name: Remove Nuitka build artifacts (onefile output already in dist/)
         working-directory: checkov-src
         run: |
@@ -202,16 +212,6 @@ jobs:
 
       #      - name: Output compilation-report.xml
       #        run: cat compilation-report.xml
-
-      - name: Test built binary (patch + imports)
-        working-directory: checkov-src
-        run: |
-          BIN=$(find ./dist -maxdepth 1 -type f \( -name 'checkov' -o -name 'checkov.exe' \) | head -1)
-          [ -z "$BIN" ] || [ ! -f "$BIN" ] && { echo "checkov not found in dist/"; exit 1; }
-          echo "=== Version ==="
-          "$BIN" --version
-          echo "=== List terraform checks (exercises patched __init__.py) ==="
-          "$BIN" --list --framework terraform | head -30
 
       - name: Zip artifact
         working-directory: checkov-src
