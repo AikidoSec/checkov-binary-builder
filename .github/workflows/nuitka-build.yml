@@ -148,7 +148,6 @@ jobs:
           --include-module=decimal \
           --include-module=operator \
           --include-module=math \
-          --include-module=typing_extensions \
           --output-filename=checkov_run \
           --include-package=checkov \
           --include-package-data=checkov \
