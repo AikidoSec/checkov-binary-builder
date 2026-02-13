@@ -114,11 +114,24 @@ jobs:
         run: |
           python -m pip install --no-cache-dir --upgrade pipenv
 
+      # On macOS Intel (macos-14-large), Python's _hashlib expects OpenSSL at /usr/local/opt/openssl@3.
+      # Nuitka's dependency scan fails if it sees two OpenSSL paths (e.g. /usr/local/lib vs openssl@3).
+      # See: https://github.com/Nuitka/Nuitka/issues/2853
       - name: Install OpenSSL on macOS Intel (for Nuitka _hashlib dependency scan)
         if: matrix.os == 'macos-14-large'
         run: |
           export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
           brew install openssl@3
+          # Python x64 expects /usr/local/opt/openssl@3; create if missing (runner may not allow brew to link there)
+          if [ ! -f /usr/local/opt/openssl@3/lib/libssl.3.dylib ]; then
+            VER=$(ls -1 "$(brew --prefix)/Cellar/openssl@3" 2>/dev/null | head -1)
+            [ -n "$VER" ] && sudo mkdir -p /usr/local/opt && sudo ln -sf "$(brew --prefix)/Cellar/openssl@3/$VER" /usr/local/opt/openssl@3
+          fi
+          # Avoid duplicate-DLL failure: remove any symlinks in /usr/local/lib that would make Nuitka see two OpenSSL copies
+          for f in /usr/local/lib/libcrypto*.dylib /usr/local/lib/libssl*.dylib; do
+            [ -L "$f" ] && sudo rm -f "$f" || true
+          done
+          test -f /usr/local/opt/openssl@3/lib/libssl.3.dylib || (echo "OpenSSL path still missing"; exit 1)
 
       - name: Install dependencies and Nuitka
         working-directory: checkov-src
@@ -171,6 +184,10 @@ jobs:
       - name: Build executable
         working-directory: checkov-src
         run: |
+          # On macOS Intel, isolate PATH so Nuitka does not see duplicate OpenSSL paths (Nuitka#2853)
+          if [ "${{ matrix.os }}" = "macos-14-large" ]; then
+            export PATH=$(echo "$PATH" | tr ':' '\n' | grep -vE '^/usr/local/bin$|^/opt/homebrew/bin$' | paste -sd ':')
+          fi
           # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
           # Plugin numpy improves numpy C-extension and random.randbits resolution in standalone
           # Entry script imports random first so numpy.random.bit_generator finds randbits
