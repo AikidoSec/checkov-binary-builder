@@ -114,15 +114,11 @@ jobs:
         run: |
           python -m pip install --no-cache-dir --upgrade pipenv
 
-      # macOS: ensure OpenSSL is at the path Python's _hashlib is linked to, so Nuitka's
-      # dependency scan does not fail (e.g. _hashlib.cpython-38-darwin.so -> libssl.3.dylib).
-      - name: Install OpenSSL on macOS (for Nuitka dependency scan)
-        if: matrix.name == 'darwin'
+      - name: Install OpenSSL on macOS Intel (for Nuitka _hashlib dependency scan)
+        if: matrix.os == 'macos-14-large'
         run: |
+          export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
           brew install openssl@3
-          # Intel (macos-14-large) uses /usr/local; ARM (macos-14-xlarge) uses /opt/homebrew.
-          # setup-python Python is linked to /usr/local/opt/openssl@3 on x64 and often
-          # /opt/homebrew/opt/openssl@3 on arm64; brew install openssl@3 creates the opt symlink.
 
       - name: Install dependencies and Nuitka
         working-directory: checkov-src
