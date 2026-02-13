@@ -186,12 +186,13 @@ jobs:
         run: |
           # On macOS Intel, drop Homebrew from PATH so Nuitka sees only one OpenSSL (Nuitka#2853)
           if [ "${{ matrix.os }}" = "macos-14-large" ]; then
-            export PATH=$(python -c "print(':'.join(p for p in os.environ['PATH'].split(':') if p not in ('/usr/local/bin','/opt/homebrew/bin')))")
+            export PATH=$(python -c "import os; print(':'.join(p for p in os.environ.get('PATH','').split(':') if p and p not in ('/usr/local/bin','/opt/homebrew/bin')))")
           fi
           # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
           # Plugin numpy improves numpy C-extension and random.randbits resolution in standalone
           # Entry script imports random first so numpy.random.bit_generator finds randbits
-          pipenv run python -m nuitka \
+          # Use python -m pipenv so we don't rely on pipenv script shebang after PATH change
+          python -m pipenv run python -m nuitka \
           --standalone \
           --onefile \
           --follow-imports \
