@@ -184,9 +184,9 @@ jobs:
       - name: Build executable
         working-directory: checkov-src
         run: |
-          # On macOS Intel, isolate PATH so Nuitka does not see duplicate OpenSSL paths (Nuitka#2853)
+          # On macOS Intel, drop Homebrew from PATH so Nuitka sees only one OpenSSL (Nuitka#2853)
           if [ "${{ matrix.os }}" = "macos-14-large" ]; then
-            export PATH=$(echo "$PATH" | tr ':' '\n' | grep -vE '^/usr/local/bin$|^/opt/homebrew/bin$' | paste -sd ':')
+            export PATH=$(python -c "print(':'.join(p for p in os.environ['PATH'].split(':') if p not in ('/usr/local/bin','/opt/homebrew/bin')))")
           fi
           # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
           # Plugin numpy improves numpy C-extension and random.randbits resolution in standalone
