@@ -10,7 +10,6 @@ jobs:
   github-release:
     runs-on: ubuntu-latest
     permissions:
-      packages: write
       contents: write
     steps:
       - name: Create Release
@@ -36,37 +35,37 @@ jobs:
             name: darwin
             suffix: "ARM64"
             python_arch: "arm64"
-            python_version: "3.8"
+            python_version: "3.12"
           # macOS Intel (x86_64) — macos-13 deprecated; use macos-14-large for x86_64
-          - os: macos-14-large
+          - os: macos-15-intel
             name: darwin
             suffix: "X86_64"
             python_arch: "x64"
-            python_version: "3.8"
+            python_version: "3.12"
           # Linux x86_64
           - os: ubuntu-22.04
             name: linux
             suffix: "X86_64"
             python_arch: "x64"
-            python_version: "3.8"
+            python_version: "3.12"
           # Linux ARM64
           - os: ubuntu-22.04-arm
             name: linux
             suffix: "ARM64"
             python_arch: "arm64"
-            python_version: "3.8"
+            python_version: "3.12"
           # Windows x64
           - os: windows-latest
             name: windows
             suffix: "X86_64"
             python_arch: "x64"
-            python_version: "3.8"
+            python_version: "3.12"
           # Windows 32-bit (uses 32-bit Python on x64 runner)
           - os: windows-latest
             name: windows
             suffix: "X86"
             python_arch: "x86"
-            python_version: "3.8"
+            python_version: "3.12"
           # Windows ARM64 (Python 3.9 not available for win32+arm64; use 3.12 + manual install)
           - os: windows-11-arm
             name: windows
@@ -96,41 +95,13 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-python@v6 # v6
-        if: matrix.os != 'windows-11-arm'
         with:
           python-version: ${{ matrix.python_version }}
           architecture: ${{ matrix.python_arch }}
 
-      - name: Install Python 3.12 ARM64 (Windows ARM64 only)
-        if: matrix.os == 'windows-11-arm'
-        run: |
-          curl -sL -o python-installer.exe "https://www.python.org/ftp/python/3.12.4/python-3.12.4-arm64.exe"
-          ./python-installer.exe /quiet InstallAllUsers=0 PrependPath=1
-          PYROOT="${HOME}/AppData/Local/Programs/Python/Python312"
-          for i in $(seq 1 30); do [ -x "${PYROOT}/python.exe" ] && break; echo "Waiting for Python install..."; sleep 2; done
-          echo "PATH=${PYROOT}:${PYROOT}/Scripts:$PATH" >> "$GITHUB_ENV"
-
       - name: Install pipenv
         run: |
           python -m pip install --no-cache-dir --upgrade pipenv
-
-      # On macOS Intel (macos-14-large), setup-python's Python 3.8 was built against OpenSSL 1.1.
-      # The runner often has OpenSSL 3 at /usr/local/opt/openssl@3; Nuitka's dependency scanner then
-      # fails with: "problem with dependency scan of _hashlib.cpython-38-darwin.so with libssl.3.dylib".
-      # Force OpenSSL 1.1 and point the loader at it so _hashlib and Nuitka see a consistent lib.
-      # See: https://github.com/Nuitka/Nuitka/issues/2853
-      - name: Use OpenSSL 1.1 on macOS Intel (for Nuitka _hashlib dependency scan)
-        if: matrix.os == 'macos-14-large'
-        run: |
-          export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
-          brew install openssl@1.1
-          OPENSSL_PREFIX=$(brew --prefix openssl@1.1)
-          echo "DYLD_LIBRARY_PATH=${OPENSSL_PREFIX}/lib:$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
-          # Avoid Nuitka seeing two OpenSSL copies: remove stray symlinks in /usr/local/lib
-          for f in /usr/local/lib/libcrypto*.dylib /usr/local/lib/libssl*.dylib; do
-            [ -L "$f" ] && sudo rm -f "$f" || true
-          done
-          test -f "${OPENSSL_PREFIX}/lib/libssl.1.1.dylib" || (echo "OpenSSL 1.1 lib not found"; exit 1)
 
       - name: Install dependencies and Nuitka
         working-directory: checkov-src
