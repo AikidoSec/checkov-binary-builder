@@ -114,24 +114,23 @@ jobs:
         run: |
           python -m pip install --no-cache-dir --upgrade pipenv
 
-      # On macOS Intel (macos-14-large), Python's _hashlib expects OpenSSL at /usr/local/opt/openssl@3.
-      # Nuitka's dependency scan fails if it sees two OpenSSL paths (e.g. /usr/local/lib vs openssl@3).
+      # On macOS Intel (macos-14-large), setup-python's Python 3.8 was built against OpenSSL 1.1.
+      # The runner often has OpenSSL 3 at /usr/local/opt/openssl@3; Nuitka's dependency scanner then
+      # fails with: "problem with dependency scan of _hashlib.cpython-38-darwin.so with libssl.3.dylib".
+      # Force OpenSSL 1.1 and point the loader at it so _hashlib and Nuitka see a consistent lib.
       # See: https://github.com/Nuitka/Nuitka/issues/2853
-      - name: Install OpenSSL on macOS Intel (for Nuitka _hashlib dependency scan)
+      - name: Use OpenSSL 1.1 on macOS Intel (for Nuitka _hashlib dependency scan)
         if: matrix.os == 'macos-14-large'
         run: |
           export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
-          brew install openssl@3
-          # Python x64 expects /usr/local/opt/openssl@3; create if missing (runner may not allow brew to link there)
-          if [ ! -f /usr/local/opt/openssl@3/lib/libssl.3.dylib ]; then
-            VER=$(ls -1 "$(brew --prefix)/Cellar/openssl@3" 2>/dev/null | head -1)
-            [ -n "$VER" ] && sudo mkdir -p /usr/local/opt && sudo ln -sf "$(brew --prefix)/Cellar/openssl@3/$VER" /usr/local/opt/openssl@3
-          fi
-          # Avoid duplicate-DLL failure: remove any symlinks in /usr/local/lib that would make Nuitka see two OpenSSL copies
+          brew install openssl@1.1
+          OPENSSL_PREFIX=$(brew --prefix openssl@1.1)
+          echo "DYLD_LIBRARY_PATH=${OPENSSL_PREFIX}/lib:$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          # Avoid Nuitka seeing two OpenSSL copies: remove stray symlinks in /usr/local/lib
           for f in /usr/local/lib/libcrypto*.dylib /usr/local/lib/libssl*.dylib; do
             [ -L "$f" ] && sudo rm -f "$f" || true
           done
-          test -f /usr/local/opt/openssl@3/lib/libssl.3.dylib || (echo "OpenSSL path still missing"; exit 1)
+          test -f "${OPENSSL_PREFIX}/lib/libssl.1.1.dylib" || (echo "OpenSSL 1.1 lib not found"; exit 1)
 
       - name: Install dependencies and Nuitka
         working-directory: checkov-src
@@ -184,14 +183,9 @@ jobs:
       - name: Build executable
         working-directory: checkov-src
         run: |
-          # On macOS Intel, drop Homebrew from PATH so Nuitka sees only one OpenSSL (Nuitka#2853)
-          if [ "${{ matrix.os }}" = "macos-14-large" ]; then
-            export PATH=$(python -c "import os; print(':'.join(p for p in os.environ.get('PATH','').split(':') if p and p not in ('/usr/local/bin','/opt/homebrew/bin')))")
-          fi
           # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
           # Plugin numpy improves numpy C-extension and random.randbits resolution in standalone
           # Entry script imports random first so numpy.random.bit_generator finds randbits
-          # Use python -m pipenv so we don't rely on pipenv script shebang after PATH change
           python -m pipenv run python -m nuitka \
           --standalone \
           --onefile \
