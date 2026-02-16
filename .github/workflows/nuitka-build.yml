@@ -66,14 +66,12 @@ jobs:
             suffix: "X86"
             python_arch: "x86"
             python_version: "3.12"
-          # Windows ARM64 disabled: NumPy 2.0.2 (from checkov lockfile) has no win_arm64 wheel,
-          # so pip builds from source; the runner uses x86_64 MinGW on aarch64 → build fails with
-          # "Did not find correct pointer sized integer." Re-enable when numpy has win_arm64 wheels.
-          # - os: windows-11-arm
-          #   name: windows
-          #   suffix: "ARM64"
-          #   python_arch: "arm64"
-          #   python_version: "3.12"
+          # Windows ARM64: lockfile has numpy==2.0.2 (no win_arm64 wheel); install step overrides to numpy>=2.1
+          - os: windows-11-arm
+            name: windows
+            suffix: "ARM64"
+            python_arch: "arm64"
+            python_version: "3.12"
     needs: [github-release]
     if: needs.github-release.outputs.upload_url != ''
     runs-on: ${{ matrix.os }}
@@ -106,10 +104,23 @@ jobs:
           python -m pip install --no-cache-dir --upgrade pipenv
 
       - name: Install dependencies and Nuitka
+        if: matrix.os != 'windows-11-arm'
         working-directory: checkov-src
         run: |
           pipenv sync --python ${{ matrix.python_version }}
           pipenv run python -m pip install "nuitka>=1.9,<4"
+
+      # Windows ARM64: NumPy 2.0.2 has no win_arm64 wheel (build from source fails with wrong toolchain).
+      # Install from lockfile with numpy overridden to >=2.1 so pip uses the pre-built win_arm64 wheel.
+      - name: Install dependencies and Nuitka (Windows ARM64)
+        if: matrix.os == 'windows-11-arm'
+        working-directory: checkov-src
+        run: |
+          pipenv --python ${{ matrix.python_version }}
+          pipenv lock -r > requirements.txt
+          python -c "import pathlib; p=pathlib.Path('requirements.txt'); p.write_text(p.read_text().replace('numpy==2.0.2','numpy>=2.1'))"
+          pipenv run pip install -r requirements.txt
+          pipenv run pip install "nuitka>=1.9,<4"
 
       - name: List directory contents
         run: ls -la . && ls -la checkov-src
