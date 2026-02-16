@@ -66,12 +66,14 @@ jobs:
             suffix: "X86"
             python_arch: "x86"
             python_version: "3.12"
-          # Windows ARM64 (Python 3.9 not available for win32+arm64; use 3.12 + manual install)
-          - os: windows-11-arm
-            name: windows
-            suffix: "ARM64"
-            python_arch: "arm64"
-            python_version: "3.12"
+          # Windows ARM64 disabled: NumPy 2.0.2 (from checkov lockfile) has no win_arm64 wheel,
+          # so pip builds from source; the runner uses x86_64 MinGW on aarch64 → build fails with
+          # "Did not find correct pointer sized integer." Re-enable when numpy has win_arm64 wheels.
+          # - os: windows-11-arm
+          #   name: windows
+          #   suffix: "ARM64"
+          #   python_arch: "arm64"
+          #   python_version: "3.12"
     needs: [github-release]
     if: needs.github-release.outputs.upload_url != ''
     runs-on: ${{ matrix.os }}
