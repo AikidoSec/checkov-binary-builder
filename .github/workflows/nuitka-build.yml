@@ -242,7 +242,12 @@ jobs:
 
       - name: Zip artifact
         working-directory: checkov-src
-        run: zip -r checkov.zip dist
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            powershell.exe -NoProfile -Command "Compress-Archive -Path dist -DestinationPath checkov.zip -Force"
+          else
+            zip -r checkov.zip dist
+          fi
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
