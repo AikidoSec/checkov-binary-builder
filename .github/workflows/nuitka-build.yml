@@ -110,35 +110,17 @@ jobs:
           pipenv sync --python ${{ matrix.python_version }}
           pipenv run python -m pip install "nuitka>=1.9,<4"
 
-      # Windows ARM64: some lockfile packages have no wheel here. We install; if pip fails
-      # with "No matching distribution found for X", we add X to a skip file and retry (max 10 attempts).
+      # Windows ARM64: Nuitka supports Windows ARM (see https://nuitka.net/user-documentation/user-manual.html#operating-system).
+      # We export requirements with numpy overridden to >=2.1 (no win_arm64 wheel for 2.0.2). Install once;
+      # on failure the full pip output is shown so the underlying cause can be fixed (e.g. add
+      # version overrides in export_requirements_win_arm64.py or fix the environment).
       - name: Install dependencies and Nuitka (Windows ARM64)
         if: matrix.os == 'windows-11-arm'
         working-directory: checkov-src
         run: |
-          SKIP_FILE=skip_packages_win_arm64.txt
-          : > "$SKIP_FILE"
-          max_attempts=10
-          attempt=1
-          while [ $attempt -le $max_attempts ]; do
-            echo "=== Install attempt $attempt of $max_attempts ==="
-            python ../scripts/export_requirements_win_arm64.py "$SKIP_FILE"
-            OUT=$(pipenv install -r requirements.txt --python ${{ matrix.python_version }} --skip-lock 2>&1)
-            if [ $? -eq 0 ]; then
-              pipenv run pip install "nuitka>=1.9,<4"
-              exit 0
-            fi
-            BAD=$(echo "$OUT" | python ../scripts/parse_pip_no_distribution.py)
-            if [ -z "$BAD" ]; then
-              echo "$OUT"
-              exit 1
-            fi
-            echo "Skipping package (no win_arm64 wheel): $BAD"
-            echo "$BAD" >> "$SKIP_FILE"
-            attempt=$((attempt + 1))
-          done
-          echo "Install failed after $max_attempts attempts."
-          exit 1
+          python ../scripts/export_requirements_win_arm64.py
+          pipenv install -r requirements.txt --python ${{ matrix.python_version }} --skip-lock
+          pipenv run pip install "nuitka>=1.9,<4"
 
       - name: List directory contents
         run: ls -la . && ls -la checkov-src
