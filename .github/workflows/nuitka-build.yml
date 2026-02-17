@@ -140,7 +140,6 @@ jobs:
           python -m pipenv run python -m nuitka \
           --standalone \
           --follow-imports \
-          --plugin-enable=numpy \
           --prefer-source-code \
           --include-module=random \
           --include-module=secrets \
@@ -154,7 +153,7 @@ jobs:
           --output-filename=checkov \
           --include-package=checkov \
           --include-package-data=checkov \
-          --include-data-dir=checkov=checkov \
+          --include-data-dir=checkov=src \
           --include-package-data=hcl2 \
           --include-package-data=license_expression \
           --include-package-data=spdx_tools \
