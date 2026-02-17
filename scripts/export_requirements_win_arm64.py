@@ -6,12 +6,14 @@ We do not use "pipenv requirements" or "pipenv lock -r" because they can fail
 depending on pipenv version (e.g. "No such option: -r" on some runners).
 This script reads Pipfile.lock (JSON) and writes requirements.txt with exact pins.
 - Numpy is forced to >=2.1 because 2.0.2 has no Windows ARM64 wheel.
-- Pyston is skipped (alternative Python runtime; no win_arm64 wheel; we use CPython).
+- Optional: pass a path to a file listing package names to skip (one per line).
+  The CI retry loop appends packages that have no win_arm64 wheel so we don't
+  maintain a hardcoded list.
 
 Run from checkov-src (where Pipfile.lock lives). Writes requirements.txt there.
 
 Usage (from checkov-src):
-  python ../scripts/export_requirements_win_arm64.py
+  python ../scripts/export_requirements_win_arm64.py [skip_packages.txt]
   pipenv install -r requirements.txt --python 3.12 --skip-lock
 """
 
@@ -22,10 +24,19 @@ from pathlib import Path
 LOCKFILE = Path("Pipfile.lock")
 REQUIREMENTS = Path("requirements.txt")
 NUMPY_OVERRIDE = "numpy>=2.1"  # 2.0.2 has no win_arm64 wheel
-SKIP_PACKAGES = {"pyston"}  # No win_arm64 wheel; we use CPython in CI
+
+
+def load_skip_packages(path: Path) -> set[str]:
+    """Load package names to skip (one per line). Missing/empty file = empty set."""
+    if not path.exists():
+        return set()
+    return {line.strip().lower() for line in path.read_text().splitlines() if line.strip()}
 
 
 def main() -> None:
+    skip_file = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    skip_packages = load_skip_packages(skip_file) if skip_file else set()
+
     if not LOCKFILE.exists():
         print(f"Error: {LOCKFILE} not found. Run from checkov-src.", file=sys.stderr)
         sys.exit(1)
@@ -41,7 +52,7 @@ def main() -> None:
     for name, info in sorted(default.items()):
         if not isinstance(info, dict) or "version" not in info:
             continue
-        if name.lower() in SKIP_PACKAGES:
+        if name.lower() in skip_packages:
             skipped.append(name)
             continue
         version = info["version"].strip()
@@ -53,7 +64,7 @@ def main() -> None:
     REQUIREMENTS.write_text("\n".join(lines) + "\n")
     msg = f"Wrote {REQUIREMENTS} ({len(lines)} packages, numpy overridden to >=2.1"
     if skipped:
-        msg += f", skipped: {', '.join(skipped)}"
+        msg += f", skipped: {', '.join(sorted(skipped))}"
     print(msg)
 
 
