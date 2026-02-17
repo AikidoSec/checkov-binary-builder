@@ -150,10 +150,10 @@ jobs:
           --include-module=decimal \
           --include-module=operator \
           --include-module=math \
-          --output-filename=checkov \
+          --output-filename=checkov-nuitka \
           --include-package=checkov \
           --include-package-data=checkov \
-          --include-data-dir=checkov=src \
+          --include-data-dir=checkov=checkov \
           --include-package-data=hcl2 \
           --include-package-data=license_expression \
           --include-package-data=spdx_tools \
@@ -181,13 +181,6 @@ jobs:
       - name: List directory contents
         run: ls -la checkov-src
 
-      - name: Move standalone output to dist/
-        working-directory: checkov-src
-        run: |
-          [ ! -d entry_nuitka.dist ] && { echo "entry_nuitka.dist not found"; exit 1; }
-          rm -rf dist
-          mv entry_nuitka.dist dist
-
       - name: Test built binary (patch + imports)
         continue-on-error: true
         working-directory: checkov-src
@@ -203,25 +196,11 @@ jobs:
           echo "$list_out" | head -30
           exit $list_ret
 
-      - name: Remove Nuitka build artifacts (binary already in dist/)
-        working-directory: checkov-src
-        run: |
-          rm -rf entry_nuitka.build entry_nuitka.dist
-
-      - name: List directory contents
-        run: ls -la checkov-src
-
-      #      - name: Output compilation-report.xml
-      #        run: cat compilation-report.xml
-
       - name: Zip artifact
         working-directory: checkov-src
         run: |
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            powershell.exe -NoProfile -Command "Compress-Archive -Path dist -DestinationPath checkov.zip -Force"
-          else
-            zip -r checkov.zip dist
-          fi
+          DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
+          zip -r checkov.zip "$DIST_DIR"
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
