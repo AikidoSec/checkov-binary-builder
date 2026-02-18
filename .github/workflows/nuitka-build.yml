@@ -200,7 +200,11 @@ jobs:
         working-directory: checkov-src
         run: |
           DIST_DIR=$(find . -maxdepth 1 -type d -name "*.dist" | head -1)
-          zip -r checkov.zip "$DIST_DIR"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            powershell -NoProfile -Command "Compress-Archive -Path '$DIST_DIR' -DestinationPath checkov.zip -Force"
+          else
+            zip -r checkov.zip "$DIST_DIR"
+          fi
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
