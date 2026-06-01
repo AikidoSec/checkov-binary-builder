@@ -101,7 +101,7 @@ jobs:
             suffix: "ARM64"
             python_arch: "arm64"
             python_version: "3.12"
-    needs: [github-release, checkout-source]
+    needs: [github-release, checkout-source, checkout-aikido-checkov]
     if: needs.github-release.outputs.upload_url != ''
     runs-on: ${{ matrix.os }}
     # Windows: use bash so Unix commands (find, zip) work; optional architecture for 32-bit Python
@@ -120,7 +120,7 @@ jobs:
         with:
           name: aikido-checkov-source-code
           path: checkov-src
-          
+
       - uses: actions/setup-python@v6 # v6
         with:
           python-version: ${{ matrix.python_version }}
