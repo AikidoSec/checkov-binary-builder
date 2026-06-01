@@ -8,7 +8,7 @@ name: Build Checkov Binary Using Nuitka
 
 jobs:
   github-release:
-    runs-on: ubuntu-latest
+    runs-on: standard-runner-no-rights-public-ip
     permissions:
       contents: write
     steps:
@@ -25,6 +25,35 @@ jobs:
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       version: v${{ github.sha }}
+
+  checkout-source:
+    runs-on: standard-runner-no-rights-public-ip
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: source-code
+          path: .
+          include-hidden-files: true
+          retention-days: 1
+
+  checkout-aikido-checkov: 
+    runs-on: standard-runner-no-rights-public-ip
+    steps:
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+        with:
+          repository: AikidoSec/checkov
+          ref: aik-2026-6
+          path: checkov-src
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: aikido-checkov-source-code
+          path: checkov-src
+          include-hidden-files: true
+          retention-days: 1
 
   build-release-artifacts:
     strategy:
@@ -72,7 +101,7 @@ jobs:
             suffix: "ARM64"
             python_arch: "arm64"
             python_version: "3.12"
-    needs: [github-release]
+    needs: [github-release, checkout-source]
     if: needs.github-release.outputs.upload_url != ''
     runs-on: ${{ matrix.os }}
     # Windows: use bash so Unix commands (find, zip) work; optional architecture for 32-bit Python
@@ -82,18 +111,16 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: source-code
+          path: .
 
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          repository: AikidoSec/checkov
-          ref: aik-2026-6
+          name: aikido-checkov-source-code
           path: checkov-src
-          token: ${{ secrets.GITHUB_TOKEN }}
-
+          
       - uses: actions/setup-python@v6 # v6
         with:
           python-version: ${{ matrix.python_version }}
