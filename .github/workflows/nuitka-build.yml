@@ -89,8 +89,8 @@ jobs:
 
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
         with:
-          repository: bridgecrewio/checkov
-          ref: 3.2.501
+          repository: AikidoSec/checkov
+          ref: aik-2026-6
           path: checkov-src
           token: ${{ secrets.GITHUB_TOKEN }}
 
