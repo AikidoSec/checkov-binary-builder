@@ -99,45 +99,6 @@ jobs:
           python-version: ${{ matrix.python_version }}
           architecture: ${{ matrix.python_arch }}
 
-      - name: Install ccache (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ccache clang
-
-      - name: Install ccache (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew update
-          brew install ccache llvm
-
-      - name: Cache Nuitka compilation cache (Linux/macOS)
-        if: runner.os != 'Windows'
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/Nuitka
-          key: nuitka-${{ runner.os }}-${{ hashFiles('checkov-src/**/*.py') }}
-          restore-keys: |
-            nuitka-${{ runner.os }}-
-
-      - name: Cache Nuitka compilation cache (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/cache@v4
-        with:
-          path: ~/AppData/Local/Nuitka/Nuitka/Cache
-          key: nuitka-${{ runner.os }}-${{ hashFiles('checkov-src/**/*.py') }}
-          restore-keys: |
-            nuitka-${{ runner.os }}-
-
-      - name: Cache ccache (Linux/macOS)
-        if: runner.os != 'Windows'
-        uses: actions/cache@v4
-        with:
-          path: ~/.ccache
-          key: ccache-${{ runner.os }}-${{ hashFiles('checkov-src/**/*.py') }}
-          restore-keys: |
-            ccache-${{ runner.os }}-
-
       - name: Install pipenv
         run: |
           python -m pip install --no-cache-dir --upgrade pipenv
@@ -173,13 +134,6 @@ jobs:
       - name: Build executable
         working-directory: checkov-src
         run: |
-          CPU_JOBS=$(python -c "import os; print(os.cpu_count() or 1)")
-          NUITKA_BACKEND_FLAGS="--lto=thin --jobs=${CPU_JOBS}"
-          if [ "$RUNNER_OS" != "Windows" ]; then
-            # Clang + ThinLTO is faster on CI than GCC full LTO.
-            NUITKA_BACKEND_FLAGS="$NUITKA_BACKEND_FLAGS --clang"
-          fi
-
           # Stdlib modules required by numpy/C extensions and asteval (e.g. randbits from random)
           # Plugin numpy improves numpy C-extension and random.randbits resolution in standalone
           # Entry script imports random first so numpy.random.bit_generator finds randbits
@@ -212,7 +166,7 @@ jobs:
           --include-module=cloudsplaining \
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
-          ${NUITKA_BACKEND_FLAGS} \
+          --lto=no \
           --assume-yes-for-downloads \
           --include-module=checkov.terraform.context_parsers \
           --include-module=checkov.terraform.checks \
