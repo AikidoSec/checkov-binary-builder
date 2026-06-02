@@ -203,8 +203,10 @@ jobs:
           --include-package-data=hcl2 \
           --include-package-data=license_expression \
           --include-package-data=spdx_tools \
+          --include-package-data=spdx \
           --include-package-data=pycep \
           --include-package-data=detect_secrets \
+          --include-package-data=policyuniverse \
           --include-package-data=policy_sentry \
           --include-package-data=cloudsplaining \
           --include-module=cloudsplaining \
