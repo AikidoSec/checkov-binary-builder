@@ -166,7 +166,7 @@ jobs:
           --include-module=cloudsplaining \
           --include-package=detect_secrets.plugins \
           --include-package=cloudsplaining.scan \
-          --lto=no \
+          --lto=yes \
           --assume-yes-for-downloads \
           --include-module=checkov.terraform.context_parsers \
           --include-module=checkov.terraform.checks \
