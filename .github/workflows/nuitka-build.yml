@@ -1,8 +1,4 @@
-on:
-  push:
-    branches:
-      - nuitka-build
-  workflow_dispatch:
+on: workflow_dispatch
 
 name: Build Checkov Binary Using Nuitka
 
