@@ -26,8 +26,8 @@ jobs:
     strategy:
       matrix:
         include:
-          # macos-13-xlarge runs on ARM
-          - os: macos-13-xlarge
+          # macos-14-xlarge runs on ARM (macOS 13 larger runners deprecated)
+          - os: macos-14-xlarge
             name: darwin
             suffix: 'ARM64'
           - os: Pyinstaller-runner
